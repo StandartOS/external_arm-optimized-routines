@@ -57,9 +57,9 @@ special_case (float32x4_t x, float32x4_t y, uint32x4_t cmp)
 
 #else
 
-#  define SpecialBound 126.0f /* rint (log2 (2^127 / (1 + sqrt (2)))).  */
-#  define SpecialOffset v_u32 (0x82000000)
-#  define SpecialBias v_u32 (0x7f000000)
+# define SpecialBound 126.0f /* rint (log2 (2^127 / (1 + sqrt (2)))).  */
+# define SpecialOffset v_u32 (0x82000000)
+# define SpecialBias v_u32 (0x7f000000)
 
 static float32x4_t VPCS_ATTR NOINLINE
 special_case (float32x4_t poly, float32x4_t n, uint32x4_t e, uint32x4_t cmp1,
@@ -90,15 +90,13 @@ float32x4_t VPCS_ATTR V_NAME_F1 (exp10) (float32x4_t x)
 #if WANT_SIMD_EXCEPT
   /* asuint(x) - TinyBound >= BigBound - TinyBound.  */
   uint32x4_t cmp = vcgeq_u32 (
-      vsubq_u32 (vandq_u32 (vreinterpretq_u32_f32 (x), v_u32 (0x7fffffff)),
-		 TinyBound),
-      Thres);
+      vsubq_u32 (vreinterpretq_u32_f32 (vabsq_f32 (x)), TinyBound), Thres);
   float32x4_t xm = x;
   /* If any lanes are special, mask them with 1 and retain a copy of x to allow
      special case handler to fix special lanes later. This is only necessary if
      fenv exceptions are to be triggered correctly.  */
   if (unlikely (v_any_u32 (cmp)))
-    x = vbslq_f32 (cmp, v_f32 (1), x);
+    x = v_zerofy_f32 (x, cmp);
 #endif
 
   /* exp10(x) = 2^n * 10^r = 2^n * (1 + poly (r)),
@@ -135,9 +133,6 @@ PL_SIG (S, F, 1, exp10, -9.9, 9.9)
 PL_SIG (V, F, 1, exp10, -9.9, 9.9)
 PL_TEST_ULP (V_NAME_F1 (exp10), 1.86)
 PL_TEST_EXPECT_FENV (V_NAME_F1 (exp10), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_F1 (exp10), 0, SpecialBound, 5000)
-PL_TEST_INTERVAL (V_NAME_F1 (exp10), SpecialBound, ScaleBound, 5000)
-PL_TEST_INTERVAL (V_NAME_F1 (exp10), ScaleBound, inf, 10000)
-PL_TEST_INTERVAL (V_NAME_F1 (exp10), -0, -SpecialBound, 5000)
-PL_TEST_INTERVAL (V_NAME_F1 (exp10), -SpecialBound, -ScaleBound, 5000)
-PL_TEST_INTERVAL (V_NAME_F1 (exp10), -ScaleBound, -inf, 10000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (exp10), 0, SpecialBound, 5000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (exp10), SpecialBound, ScaleBound, 5000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (exp10), ScaleBound, inf, 10000)

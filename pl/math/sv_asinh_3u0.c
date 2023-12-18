@@ -21,8 +21,8 @@
 #define N (1 << V_LOG_TABLE_BITS)
 #define OFF (0x3fe6900900000000)
 
-static NOINLINE svfloat64_t
-__sv_asinh_special_case (svfloat64_t x, svfloat64_t y, svbool_t special)
+static svfloat64_t NOINLINE
+special_case (svfloat64_t x, svfloat64_t y, svbool_t special)
 {
   return sv_call_f64 (asinh, x, y, special);
 }
@@ -111,7 +111,7 @@ svfloat64_t SV_NAME_D1 (asinh) (svfloat64_t x, const svbool_t pg)
   y = svreinterpret_f64 (sveor_x (pg, svreinterpret_u64 (y), sign));
 
   if (unlikely (svptest_any (pg, special)))
-    return __sv_asinh_special_case (x, y, special);
+    return special_case (x, y, special);
   return y;
 }
 
@@ -120,14 +120,10 @@ PL_TEST_ULP (SV_NAME_D1 (asinh), 2.52)
 /* Test vector asinh 3 times, with control lane < 1, > 1 and special.
    Ensures the svsel is choosing the right option in all cases.  */
 #define SV_ASINH_INTERVAL(lo, hi, n)                                          \
-  PL_TEST_INTERVAL_C (SV_NAME_D1 (asinh), lo, hi, n, 0.5)                     \
-  PL_TEST_INTERVAL_C (SV_NAME_D1 (asinh), lo, hi, n, 2)                       \
-  PL_TEST_INTERVAL_C (SV_NAME_D1 (asinh), lo, hi, n, 0x1p600)
+  PL_TEST_SYM_INTERVAL_C (SV_NAME_D1 (asinh), lo, hi, n, 0.5)                 \
+  PL_TEST_SYM_INTERVAL_C (SV_NAME_D1 (asinh), lo, hi, n, 2)                   \
+  PL_TEST_SYM_INTERVAL_C (SV_NAME_D1 (asinh), lo, hi, n, 0x1p600)
 SV_ASINH_INTERVAL (0, 0x1p-26, 50000)
 SV_ASINH_INTERVAL (0x1p-26, 1, 50000)
 SV_ASINH_INTERVAL (1, 0x1p511, 50000)
 SV_ASINH_INTERVAL (0x1p511, inf, 40000)
-SV_ASINH_INTERVAL (-0, -0x1p-26, 50000)
-SV_ASINH_INTERVAL (-0x1p-26, -1, 50000)
-SV_ASINH_INTERVAL (-1, -0x1p511, 50000)
-SV_ASINH_INTERVAL (-0x1p511, -inf, 40000)

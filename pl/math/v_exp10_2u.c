@@ -48,7 +48,7 @@ const static struct data
 # define BigBound v_u64 (0x4070000000000000)  /* asuint64 (0x1p8).  */
 # define Thres v_u64 (0x2070000000000000)     /* BigBound - TinyBound.  */
 
-static inline float64x2_t VPCS_ATTR
+static float64x2_t VPCS_ATTR NOINLINE
 special_case (float64x2_t x, float64x2_t y, uint64x2_t cmp)
 {
   /* If fenv exceptions are to be triggered correctly, fall back to the scalar
@@ -63,7 +63,7 @@ special_case (float64x2_t x, float64x2_t y, uint64x2_t cmp)
 # define SpecialBias1 v_u64 (0x7000000000000000)  /* 0x1p769.  */
 # define SpecialBias2 v_u64 (0x3010000000000000)  /* 0x1p-254.  */
 
-static float64x2_t VPCS_ATTR NOINLINE
+static inline float64x2_t VPCS_ATTR
 special_case (float64x2_t s, float64x2_t y, float64x2_t n,
 	      const struct data *d)
 {
@@ -139,9 +139,6 @@ PL_SIG (S, D, 1, exp10, -9.9, 9.9)
 PL_SIG (V, D, 1, exp10, -9.9, 9.9)
 PL_TEST_ULP (V_NAME_D1 (exp10), 1.15)
 PL_TEST_EXPECT_FENV (V_NAME_D1 (exp10), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_D1 (exp10), 0, SpecialBound, 5000)
-PL_TEST_INTERVAL (V_NAME_D1 (exp10), SpecialBound, ScaleBound, 5000)
-PL_TEST_INTERVAL (V_NAME_D1 (exp10), ScaleBound, inf, 10000)
-PL_TEST_INTERVAL (V_NAME_D1 (exp10), -0, -SpecialBound, 5000)
-PL_TEST_INTERVAL (V_NAME_D1 (exp10), -SpecialBound, -ScaleBound, 5000)
-PL_TEST_INTERVAL (V_NAME_D1 (exp10), -ScaleBound, -inf, 10000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (exp10), 0, SpecialBound, 5000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (exp10), SpecialBound, ScaleBound, 5000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (exp10), ScaleBound, inf, 10000)
